@@ -1,0 +1,115 @@
+
+// BRIGHT BECE RESULTS AND PLACEMENT PORTAL
+// Main application script
+
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("lookupForm");
+  const message = document.getElementById("message");
+  const result = document.getElementById("result");
+  const details = document.getElementById("resultDetails");
+  const button = document.getElementById("submitButton");
+
+  if (!form) return;
+
+  const allowedFields = {
+    index_number: "Index Number",
+    first_name: "First Name",
+    last_name: "Last Name",
+    full_name: "Student Name",
+    placement_school: "Placement School",
+    school_name: "School Name",
+    programme: "Programme",
+    residential_status: "Residential Status",
+    placement_location: "Placement Location"
+  };
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    message.textContent = "";
+    details.replaceChildren();
+    result.style.display = "none";
+
+    const indexNumber = document
+      .getElementById("indexNumber").value.trim();
+
+    const pin = document
+      .getElementById("pin").value.trim();
+
+    if (!indexNumber || !pin) {
+      message.textContent =
+        "Please enter your index number and PIN.";
+      return;
+    }
+
+    if (
+      typeof window.portalLookup !== "function"
+    ) {
+      message.textContent =
+        "The database connection is not configured yet.";
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "CHECKING...";
+
+    message.textContent =
+      "Please wait while your details are checked.";
+
+    try {
+      const student = await window.portalLookup(
+        indexNumber,
+        pin
+      );
+
+      if (!student) {
+        message.textContent =
+          "No matching record was found. Check your details.";
+        return;
+      }
+
+      let count = 0;
+
+      Object.entries(allowedFields).forEach(function ([key, label]) {
+        if (
+          student[key] !== undefined &&
+          student[key] !== null
+        ) {
+          const row = document.createElement("div");
+          row.className = "result-row";
+
+          const heading = document.createElement("strong");
+          heading.textContent = label;
+
+          const value = document.createElement("span");
+          value.textContent = String(student[key]);
+
+          row.append(heading, value);
+          details.appendChild(row);
+
+          count++;
+        }
+      });
+
+      if (count === 0) {
+        message.textContent =
+          "The record was found, but no displayable details were returned.";
+        return;
+      }
+
+      result.style.display = "block";
+      message.textContent =
+        "Your record has been found.";
+
+    } catch (error) {
+      console.error(error);
+
+      message.textContent =
+        "We could not retrieve your record. Please try again later.";
+
+    } finally {
+      button.disabled = false;
+      button.textContent = "CHECK RESULTS";
+    }
+  });
+});
