@@ -1,0 +1,358 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BRIGHT BECE RESULTS AND PLACEMENT PORTAL</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #eef3fb;
+      color: #172554;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #082b62;
+      color: white;
+      text-align: center;
+      padding: 28px 15px;
+    }
+
+    header h1 {
+      font-size: 25px;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      font-size: 14px;
+      color: #dbeafe;
+    }
+
+    .year {
+      display: inline-block;
+      background: #f5c542;
+      color: #082b62;
+      padding: 7px 18px;
+      border-radius: 20px;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    main {
+      max-width: 650px;
+      margin: 35px auto;
+      padding: 0 15px;
+    }
+
+    .card {
+      background: white;
+      padding: 28px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px #00000012;
+    }
+
+    .card h2 {
+      text-align: center;
+      margin-bottom: 12px;
+      color: #082b62;
+    }
+
+    .intro {
+      text-align: center;
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 25px;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 17px 0 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    input:focus {
+      outline: 2px solid #2563eb;
+      border-color: #2563eb;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 22px;
+      border: none;
+      border-radius: 8px;
+      background: #0754b8;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #063d87;
+    }
+
+    button:disabled {
+      background: #94a3b8;
+      cursor: wait;
+    }
+
+    #message {
+      margin-top: 18px;
+      text-align: center;
+      font-weight: bold;
+      line-height: 1.5;
+    }
+
+    #result {
+      display: none;
+      margin-top: 25px;
+      padding: 20px;
+      background: #eff6ff;
+      border-radius: 10px;
+    }
+
+    #result h3 {
+      margin-bottom: 15px;
+      color: #082b62;
+    }
+
+    .result-row {
+      padding: 10px 0;
+      border-bottom: 1px solid #dbeafe;
+      overflow-wrap: anywhere;
+    }
+
+    .result-row strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .notice {
+      margin-top: 22px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #64748b;
+      text-align: center;
+    }
+
+    footer {
+      text-align: center;
+      padding: 25px 15px;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    @media(max-width: 480px) {
+      header h1 {
+        font-size: 21px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>BRIGHT BECE RESULTS AND PLACEMENT PORTAL</h1>
+  <p>Student Results and School Placement Information</p>
+  <div class="year">EXAMINATION YEAR 2026</div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Check Your Results</h2>
+
+    <p class="intro">
+      Enter your BECE index number and private PIN
+      to check your available results and placement information.
+    </p>
+
+    <form id="lookupForm">
+      <label for="indexNumber">BECE Index Number</label>
+      <input
+        id="indexNumber"
+        type="text"
+        placeholder="Enter your index number"
+        required
+        autocomplete="off"
+      >
+
+      <label for="pin">Private PIN</label>
+      <input
+        id="pin"
+        type="password"
+        placeholder="Enter your private PIN"
+        required
+        autocomplete="off"
+      >
+
+      <button id="submitButton" type="submit">
+        CHECK RESULTS
+      </button>
+    </form>
+
+    <div id="message" role="status"></div>
+
+    <div id="result" aria-live="polite">
+      <h3>Results and Placement Details</h3>
+      <div id="resultDetails"></div>
+    </div>
+
+    <p class="notice">
+      This is an independent results portal. It is not affiliated
+      with WAEC, GES or the CSSPS. Results and placement information
+      are displayed only when authorized data is available.
+    </p>
+  </section>
+</main>
+
+<footer>
+  <p>Website Author: Bright Kwarkye Amoasi</p>
+  <p>© 2026 Bright BECE Results and Placement Portal</p>
+</footer>
+
+<script>
+  // SUPABASE CONNECTION
+  const SUPABASE_URL = "https://eorqemckpwmenwqcfoav.supabase.co";
+
+  // Replace this placeholder with your SUPABASE PUBLISHABLE KEY.
+  // NEVER use your secret or service-role key here.
+  const SUPABASE_PUBLISHABLE_KEY =
+    "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
+
+  const client = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+  const form = document.getElementById("lookupForm");
+  const message = document.getElementById("message");
+  const result = document.getElementById("result");
+  const details = document.getElementById("resultDetails");
+  const submitButton = document.getElementById("submitButton");
+
+  const allowedFields = {
+    index_number: "Index Number",
+    first_name: "First Name",
+    last_name: "Last Name",
+    full_name: "Student Name",
+    placement_school: "Placement School",
+    school_name: "School Name",
+    programme: "Programme",
+    residential_status: "Residential Status",
+    placement_location: "Placement Location"
+  };
+
+  form.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    result.style.display = "none";
+    details.replaceChildren();
+    message.textContent = "";
+
+    if (SUPABASE_PUBLISHABLE_KEY.includes("PASTE_YOUR")) {
+      message.textContent =
+        "The website connection still needs to be configured.";
+      return;
+    }
+
+    const indexNumber =
+      document.getElementById("indexNumber").value.trim();
+
+    const pin =
+      document.getElementById("pin").value.trim();
+
+    if (!indexNumber || !pin) {
+      message.textContent = "Please enter your index number and PIN.";
+      return;
+    }
+
+    submitButton.disabled = true;
+    submitButton.textContent = "CHECKING...";
+    message.textContent = "Please wait while we check your details.";
+
+    try {
+      const { data, error } = await client.rpc(
+        "lookup_student_result",
+        {
+          p_index_number: indexNumber,
+          p_pin: pin
+        }
+      );
+
+      if (error) throw error;
+
+      const student = Array.isArray(data) ? data[0] : data;
+
+      if (!student || Object.keys(student).length === 0) {
+        message.textContent =
+          "No matching result was found. Please check your details.";
+        return;
+      }
+
+      let displayed = 0;
+
+      Object.entries(allowedFields).forEach(([key, label]) => {
+        if (student[key] !== undefined && student[key] !== null) {
+          const row = document.createElement("div");
+          row.className = "result-row";
+
+          const heading = document.createElement("strong");
+          heading.textContent = label;
+
+          const value = document.createElement("span");
+          value.textContent = String(student[key]);
+
+          row.append(heading, value);
+          details.appendChild(row);
+          displayed++;
+        }
+      });
+
+      if (displayed === 0) {
+        message.textContent =
+          "The record was returned, but its display fields need configuration.";
+        return;
+      }
+
+      result.style.display = "block";
+      message.textContent = "Your record was found.";
+
+    } catch (error) {
+      console.error(error);
+      message.textContent =
+        "Unable to check results at the moment. Please try again later.";
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = "CHECK RESULTS";
+    }
+  });
+</script>
+
+</body>
+</html>
